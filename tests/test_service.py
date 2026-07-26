@@ -1371,9 +1371,9 @@ async def test_falha_em_chave_de_ttl_longo_expira_pelo_ttl_da_falha():
 
 
 async def test_falha_permanente_nao_e_guardada():
-    """401/403 não passam pelo backoff — o `_get()` levanta na hora, então não há
-    espera a economizar. Guardar só faria o app demorar até 60s para perceber que
-    um perfil acabou de virar público."""
+    """401/403 não passam pelo backoff — o `_get()` levanta na hora. Sem cache
+    do "não": um jogo que a Steam liberar depois deve refletir isso na próxima
+    chamada, não ficar preso à falha por até 60s."""
     client = FakeSteamClient(
         owned_games=[{"appid": 10, "name": "A", "playtime_forever": 1, "img_icon_url": "a"}],
         achievements={10: SteamDataUnavailable("acesso negado")},
@@ -1382,10 +1382,42 @@ async def test_falha_permanente_nao_e_guardada():
     service = make_service(client)
 
     for _ in range(2):
-        with pytest.raises(SteamDataUnavailable):
-            await service.game_detail(STEAMID, 10)
+        detail = await service.game_detail(STEAMID, 10)
+        assert detail.supports_achievements is False
 
     assert client.ach_calls == [10, 10]  # nada foi guardado
+
+
+async def test_detalhe_com_schema_negado_mantem_conquistas():
+    # 401/403 do schema é do JOGO, não da conta — a mesma conquista já veio de
+    # GetPlayerAchievements, então a página não pode virar "perfil privado".
+    client = FakeSteamClient(
+        achievements={10: [{"apiname": "A", "achieved": 1}]},
+        schemas={10: SteamDataUnavailable("acesso negado")},
+    )
+    service = make_service(client)
+
+    detail = await service.game_detail(STEAMID, 10)
+
+    assert detail.supports_achievements is True
+    assert detail.achievements[0].display_name == "A"  # sem schema, cai no apiname
+    assert detail.achievements[0].description is None
+
+
+async def test_detalhe_sem_stats_e_schema_negado_nao_quebra():
+    # Cobre o outro call-site de _schema() (branch "sem stats"): mesmo com os
+    # dois 401/403 empilhados (sem conquistas *e* sem schema), a página ainda
+    # responde — sem gameName nem biblioteca em cache, cai no último recurso.
+    client = FakeSteamClient(
+        achievements={10: None},
+        schemas={10: SteamDataUnavailable("acesso negado")},
+    )
+    service = make_service(client)
+
+    detail = await service.game_detail(STEAMID, 10)
+
+    assert detail.supports_achievements is False
+    assert detail.name == "App 10"
 
 
 async def test_falha_de_rate_limit_da_ia_nunca_e_guardada():

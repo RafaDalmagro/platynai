@@ -193,10 +193,12 @@ class AchievementsService:
         try:
             player = await self._player_achievements(steamid, appid)
         except SteamDataUnavailable:
-            # Mesma ambiguidade da biblioteca: só o perfil desempata conta
-            # inexistente de conta privada. Pago só no caminho de erro.
+            # 401/403 aqui é por JOGO, não por conta (mesma causa do 403 em
+            # _schema, abaixo) — a lista (`_fill_counts`) já trata a mesma
+            # falha como best-effort; o detalhe precisa da mesma postura. Só
+            # resta descartar conta inexistente antes de degradar.
             await self._assert_exists(steamid)
-            raise
+            player = None
         if not player:
             # Jogo sem conquistas não paga a chamada de raridade: não haveria
             # onde exibi-la.
@@ -506,9 +508,19 @@ class AchievementsService:
         )
 
     async def _schema(self, appid: int) -> dict:
-        return await self._cached(
-            f"schema:{appid}", SCHEMA_TTL, lambda: self._client.get_schema(appid)
-        )
+        async def buscar() -> dict:
+            try:
+                return await self._client.get_schema(appid)
+            except SteamDataUnavailable:
+                # 401/403 aqui é do JOGO, não da conta — a Steam nega o
+                # schema de um appid específico independente da privacidade
+                # do perfil (mesma causa do 403 em GetPlayerAchievements, ver
+                # game_detail). Só este tipo degrada; 5xx/429 continuam
+                # propagando — são transitórios de verdade, e `_cached()` já
+                # os retenta/guarda com FALHA_TTL.
+                return {}
+
+        return await self._cached(f"schema:{appid}", SCHEMA_TTL, buscar)
 
     async def _schema_en(self, appid: int) -> dict:
         """Schema em inglês — só o `name_en`. Chave por *jogo*, compartilhada.
