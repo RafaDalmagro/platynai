@@ -21,7 +21,7 @@ function SteamIdValido() {
 
 function App() {
   return (
-    <div className="min-h-screen">
+    <div className="grid h-dvh grid-rows-[auto_1fr_auto]">
       <a
         href="#conteudo"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground"
@@ -29,7 +29,9 @@ function App() {
         Pular para o conteúdo
       </a>
       <Header />
-      <main id="conteudo" className="mx-auto max-w-6xl p-6">
+      {/* min-h-0: item de grid tem min-height:auto implícito — sem isto o
+          overflow-y-auto é ignorado e o conteúdo estoura a linha de 1fr. */}
+      <main id="conteudo" className="mx-auto w-full min-h-0 max-w-6xl overflow-y-auto p-6">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/u/:steamid" element={<SteamIdValido />}>
@@ -39,6 +41,9 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
+      <footer className="border-t border-border px-6 py-4 text-center text-sm text-muted-foreground">
+        Desenvolvido por Rafa Dalmagro
+      </footer>
     </div>
   );
 }

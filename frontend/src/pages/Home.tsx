@@ -126,9 +126,10 @@ export function Home() {
 
 	// Centrado na vertical porque a página é só o herói: sem o "Como funciona"
 	// que antes ocupava a dobra, o conteúdo encostava no topo e sobrava meia tela
-	// morta embaixo. O desconto de 9rem é o header + o p-6 do <main> (App.tsx).
+	// morta embaixo. h-full preenche exatamente a linha de 1fr que o grid do
+	// App.tsx já reserva descontando header e footer — sem número mágico.
 	return (
-		<div className="flex min-h-[calc(100vh-9rem)] items-center py-10">
+		<div className="flex h-full items-center py-6 md:py-10">
 			<section className="grid items-center gap-10 md:grid-cols-[1.2fr_1fr]">
 				<div>
 					<p className="font-display text-sm uppercase tracking-[0.3em] text-primary">
