@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatarData, formatarHoras } from "@/lib/format";
 import { isQuaseLa } from "@/lib/progress";
 import type { Game } from "@/api/client";
@@ -11,11 +12,24 @@ import type { Game } from "@/api/client";
 const coverUrl = (appid: number) =>
   `https://cdn.cloudflare.steamstatic.com/steam/apps/${appid}/header.jpg`;
 
-export function GameCard({ steamid, game }: { steamid: string; game: Game }) {
+export function GameCard({
+  steamid,
+  game,
+  loadingAchievements,
+}: {
+  steamid: string;
+  game: Game;
+  // true só quando o sort/group atual pediu `achievements` e o fetch ainda
+  // não voltou (ver Library.tsx). Sem badge-placeholder de propósito: o
+  // resultado (100%/Quase lá/nenhum) é incerto até o dado chegar, e prometer
+  // um selo que talvez não venha é pior sinal que nenhum.
+  loadingAchievements?: boolean;
+}) {
   const [coverFailed, setCoverFailed] = useState(false);
   const hours = formatarHoras(game.playtime_minutes);
   const percent = game.percent != null ? Math.round(game.percent) : null;
   const complete = percent === 100;
+  const showPlaceholder = percent == null && loadingAchievements;
 
   return (
     // `content-visibility: auto` pula o render do que está fora da viewport —
@@ -85,6 +99,7 @@ export function GameCard({ steamid, game }: { steamid: string; game: Game }) {
                 {game.achieved_count}/{game.total_count}
               </span>
             )}
+            {showPlaceholder && <Skeleton className="h-4 w-12" />}
           </div>
           {game.last_played_at && (
             <time
@@ -100,6 +115,13 @@ export function GameCard({ steamid, game }: { steamid: string; game: Game }) {
               segmented
               complete={complete}
               aria-label={`${percent}% das conquistas de ${game.name}`}
+            />
+          )}
+          {showPlaceholder && (
+            <Skeleton
+              role="status"
+              aria-label={`Carregando progresso de conquistas de ${game.name}`}
+              className="h-2 w-full"
             />
           )}
         </div>

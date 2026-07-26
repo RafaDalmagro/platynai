@@ -78,4 +78,38 @@ describe("GameCard", () => {
     renderWithProviders(<GameCard steamid="76561197960287930" game={game} />);
     expect(screen.queryByText("Quase lá")).not.toBeInTheDocument();
   });
+
+  it("mostra placeholder de carregamento quando aguarda conquistas e ainda não tem percent", () => {
+    renderWithProviders(
+      <GameCard
+        steamid="76561197960287930"
+        game={game}
+        loadingAchievements
+      />,
+    );
+
+    expect(
+      screen.getByRole("status", { name: /carregando progresso de conquistas/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("não mostra placeholder quando não está aguardando conquistas", () => {
+    renderWithProviders(<GameCard steamid="76561197960287930" game={game} />);
+
+    expect(
+      screen.queryByRole("status", { name: /carregando progresso de conquistas/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("mostra os dados reais, não o placeholder, quando o percent já chegou", () => {
+    const quase: Game = { ...game, percent: 85, achieved_count: 17, total_count: 20 };
+    renderWithProviders(
+      <GameCard steamid="76561197960287930" game={quase} loadingAchievements />,
+    );
+
+    expect(screen.getByText("17/20")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("status", { name: /carregando progresso de conquistas/i }),
+    ).not.toBeInTheDocument();
+  });
 });

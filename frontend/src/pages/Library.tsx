@@ -87,6 +87,10 @@ export function Library() {
     steamid,
     includesFor(sort, group),
   );
+  // Só liga quando o sort/group atual pediu `achievements` — ordenar por
+  // nome/tempo/data nunca refetcha, então nunca aciona o placeholder.
+  const loadingAchievements =
+    isFetching && includesFor(sort, group).includes("achievements");
   // Best-effort: perfil indisponível apenas mantém o título genérico.
   const { data: profile } = usePlayerSummary(steamid);
 
@@ -189,7 +193,12 @@ export function Library() {
               </h2>
               <div className={GRID}>
                 {games.map((game) => (
-                  <GameCard key={game.appid} steamid={steamid} game={game} />
+                  <GameCard
+                    key={game.appid}
+                    steamid={steamid}
+                    game={game}
+                    loadingAchievements={loadingAchievements}
+                  />
                 ))}
               </div>
             </section>
@@ -200,7 +209,12 @@ export function Library() {
       {jogos && group !== "genre" && (
         <div className={GRID}>
           {jogos.map((game) => (
-            <GameCard key={game.appid} steamid={steamid} game={game} />
+            <GameCard
+              key={game.appid}
+              steamid={steamid}
+              game={game}
+              loadingAchievements={loadingAchievements}
+            />
           ))}
         </div>
       )}

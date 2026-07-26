@@ -483,4 +483,56 @@ describe("Library", () => {
       screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent),
     ).toEqual(["Quase", "SemDado"]);
   });
+
+  it("mostra placeholder no card enquanto busca conquistas ao trocar de sort", async () => {
+    // Segunda resposta controlada manualmente (deferred): precisa observar o
+    // estado intermediário (fetch em voo) antes de resolver, coisa que
+    // `vi.fn(async () => …)` não permite por resolver de imediato.
+    let resolverSegundoFetch!: (resp: Response) => void;
+    const segundoFetch = new Promise<Response>((resolve) => {
+      resolverSegundoFetch = resolve;
+    });
+
+    const fetchMock = vi.fn((url: string) => {
+      if (url.includes("include=achievements")) return segundoFetch;
+      return Promise.resolve(
+        jsonResponse([
+          { appid: 10, name: "Portal", playtime_minutes: 480, icon_url: null },
+        ]),
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWithProviders(<App />, "/u/76561197960287930");
+    await screen.findByText("Portal");
+
+    await userEvent.click(screen.getByRole("button", { name: "% concluído" }));
+
+    expect(
+      await screen.findByRole("status", {
+        name: /carregando progresso de conquistas/i,
+      }),
+    ).toBeInTheDocument();
+
+    resolverSegundoFetch(
+      jsonResponse([
+        {
+          appid: 10,
+          name: "Portal",
+          playtime_minutes: 480,
+          icon_url: null,
+          percent: 90,
+          achieved_count: 9,
+          total_count: 10,
+        },
+      ]),
+    );
+
+    expect(await screen.findByText("9/10")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("status", {
+        name: /carregando progresso de conquistas/i,
+      }),
+    ).not.toBeInTheDocument();
+  });
 });

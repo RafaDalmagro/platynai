@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/react";
 import { Outlet, Route, Routes, useParams } from "react-router-dom";
 
 import { Header } from "@/components/Header";
@@ -44,6 +45,7 @@ function App() {
       <footer className="border-t border-border px-6 py-4 text-center text-sm text-muted-foreground">
         Desenvolvido por Rafa Dalmagro
       </footer>
+      <Analytics />
     </div>
   );
 }
