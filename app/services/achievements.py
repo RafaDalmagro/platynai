@@ -190,15 +190,21 @@ class AchievementsService:
         )
 
     async def game_detail(self, steamid: str, appid: int) -> GameDetail:
+        achievements_private = False
         try:
             player = await self._player_achievements(steamid, appid)
         except SteamDataUnavailable:
             # 401/403 aqui é por JOGO, não por conta (mesma causa do 403 em
             # _schema, abaixo) — a lista (`_fill_counts`) já trata a mesma
             # falha como best-effort; o detalhe precisa da mesma postura. Só
-            # resta descartar conta inexistente antes de degradar.
+            # resta descartar conta inexistente antes de degradar. É
+            # especificamente esta chamada (GetPlayerAchievements) que a
+            # Steam nega com "Profile is not public" quando o jogador tem a
+            # visibilidade de "Detalhes do jogo" fechada — daí marcar
+            # achievements_private (ver GameDetail.tsx no frontend).
             await self._assert_exists(steamid)
             player = None
+            achievements_private = True
         if not player:
             # Jogo sem conquistas não paga a chamada de raridade: não haveria
             # onde exibi-la.
@@ -207,6 +213,7 @@ class AchievementsService:
                 appid=appid,
                 name=self._name(schema, steamid, appid),
                 supports_achievements=False,
+                achievements_private=achievements_private,
                 achieved_count=0,
                 total_count=0,
                 percent=0.0,

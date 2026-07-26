@@ -131,7 +131,16 @@ export function GameDetail() {
         <h1 className="mb-4 text-2xl font-semibold uppercase tracking-wide">
           {data.name}
         </h1>
-        <Message>Este jogo não possui conquistas.</Message>
+        {/* achievements_private distingue "jogo sem conquistas" (a Steam não
+            tem o que mostrar) de "conquistas privadas" (a Steam tem o dado,
+            mas nega por causa da config "Detalhes do jogo" — separada da
+            privacidade geral do perfil). Confundir os dois faria alguém com
+            biblioteca pública e conquistas de verdade achar que o app quebrou. */}
+        <Message>
+          {data.achievements_private
+            ? "As conquistas deste jogo estão privadas nas configurações da Steam (“Detalhes do jogo”), separado da privacidade geral do perfil."
+            : "Este jogo não possui conquistas."}
+        </Message>
       </div>
     );
   }

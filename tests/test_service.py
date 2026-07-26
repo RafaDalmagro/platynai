@@ -723,6 +723,9 @@ async def test_detalhe_de_jogo_sem_stats_nao_quebra():
     assert detail.supports_achievements is False
     assert detail.name == "Sem Stats"
     assert detail.achievements == []
+    # `[]`/`None` sem exceção é jogo genuinamente sem conquistas — nada a ver
+    # com a privacidade de "Detalhes do jogo" (essa vem só de SteamDataUnavailable).
+    assert detail.achievements_private is False
 
 
 async def test_detalhe_expoe_a_raridade_global_de_cada_conquista():
@@ -1384,6 +1387,10 @@ async def test_falha_permanente_nao_e_guardada():
     for _ in range(2):
         detail = await service.game_detail(STEAMID, 10)
         assert detail.supports_achievements is False
+        # É especificamente esta falha (GetPlayerAchievements negado, conta
+        # existe) que sinaliza "privacidade de Detalhes do jogo fechada" —
+        # distinto de um jogo genuinamente sem conquistas (REQ ver GameDetail.tsx).
+        assert detail.achievements_private is True
 
     assert client.ach_calls == [10, 10]  # nada foi guardado
 
@@ -1402,6 +1409,9 @@ async def test_detalhe_com_schema_negado_mantem_conquistas():
     assert detail.supports_achievements is True
     assert detail.achievements[0].display_name == "A"  # sem schema, cai no apiname
     assert detail.achievements[0].description is None
+    # Schema negado não é a mesma causa de "privado": aqui a conquista veio
+    # normalmente de GetPlayerAchievements, só faltou o nome/descrição.
+    assert detail.achievements_private is False
 
 
 async def test_detalhe_sem_stats_e_schema_negado_nao_quebra():
@@ -1418,6 +1428,7 @@ async def test_detalhe_sem_stats_e_schema_negado_nao_quebra():
 
     assert detail.supports_achievements is False
     assert detail.name == "App 10"
+    assert detail.achievements_private is False
 
 
 async def test_falha_de_rate_limit_da_ia_nunca_e_guardada():

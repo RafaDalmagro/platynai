@@ -86,6 +86,12 @@ class GameDetail(BaseModel):
     appid: int
     name: str
     supports_achievements: bool
+    # True só quando a Steam negou GetPlayerAchievements com "perfil não é
+    # público" *para este jogador* — a visibilidade de "Detalhes do jogo" está
+    # fechada nas configs de privacidade, distinto (e mais raro) que a
+    # privacidade geral do perfil. Um jogo genuinamente sem conquistas sempre
+    # devolve False aqui, mesmo com supports_achievements também False.
+    achievements_private: bool = False
     achieved_count: int
     total_count: int
     percent: float

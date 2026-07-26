@@ -209,6 +209,11 @@ export interface components {
             name: string;
             /** Supports Achievements */
             supports_achievements: boolean;
+            /**
+             * Achievements Private
+             * @default false
+             */
+            achievements_private: boolean;
             /** Achieved Count */
             achieved_count: number;
             /** Total Count */

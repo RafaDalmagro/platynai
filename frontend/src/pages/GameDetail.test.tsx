@@ -230,6 +230,36 @@ describe("GameDetail", () => {
     );
   });
 
+  it("mostra mensagem distinta quando as conquistas estão privadas (não genérica)", async () => {
+    // achievements_private distingue "sem conquistas" (Steam não tem o dado)
+    // de "privado" (Steam tem, mas nega por causa de "Detalhes do jogo") —
+    // confundir os dois faria um perfil com conquistas reais parecer quebrado.
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        jsonResponse({
+          appid: 617290,
+          name: "Remnant: From the Ashes",
+          supports_achievements: false,
+          achievements_private: true,
+          achieved_count: 0,
+          total_count: 0,
+          percent: 0.0,
+          achievements: [],
+        }),
+      ),
+    );
+
+    renderWithProviders(<App />, "/u/76561197960287930/game/617290");
+
+    await waitFor(() =>
+      expect(screen.getByText(/conquistas.*estão privadas/i)).toBeInTheDocument(),
+    );
+    expect(
+      screen.queryByText("Este jogo não possui conquistas."),
+    ).not.toBeInTheDocument();
+  });
+
   it("mostra a raridade global e marca como rara a conquista abaixo de 10%", async () => {
     vi.stubGlobal(
       "fetch",

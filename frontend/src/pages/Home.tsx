@@ -232,6 +232,16 @@ export function Home() {
 								biblioteca para ninguém — mude para público em Privacidade,
 								nas configurações do seu perfil.
 							</p>
+							{/* Biblioteca e conquistas usam toggles diferentes na Steam
+							    (REQ ver GameDetail.tsx/achievements_private) — sem esta
+							    linha, quem tem o perfil público mas "Detalhes do jogo"
+							    fechado lê a mensagem acima, marca o perfil como público de
+							    novo e continua sem entender por que as conquistas não vêm. */}
+							<p className="mt-2">
+								Biblioteca aparece mas <strong>conquistas de um jogo</strong>{" "}
+								não? É outra configuração — "Detalhes do jogo" controla isso
+								separado do perfil geral; ative-a também em Privacidade.
+							</p>
 						</details>
 					</form>
 
