@@ -1,4 +1,4 @@
-# Steam Conquest
+# PlatynAI
 
 App web pessoal para acompanhar conquistas, biblioteca e tempo de jogo de uma
 conta Steam. Single-user, consulta em tempo real (sem banco de dados).

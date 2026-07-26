@@ -1,4 +1,4 @@
-# Planos de animação — steamconquest
+# Planos de animação — platynai
 
 Auditoria de motion do frontend (React 19 + Tailwind v4 CSS-first, sem lib de
 motion). Cada plano é self-contained: valores exatos, sem referência a discussão

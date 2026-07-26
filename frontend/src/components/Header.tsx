@@ -31,10 +31,10 @@ export function Header() {
     <header className="flex items-center gap-6 border-b border-border bg-header px-6 py-4">
       <Link
         to="/"
-        aria-label="Conquistas — página inicial"
+        aria-label="PlatynAI — página inicial"
         className="font-display font-semibold tracking-widest text-primary hover:underline"
       >
-        ▌CONQUISTAS_
+        ▌PLATYNAI_
       </Link>
       <nav aria-label="Trilha de navegação">
         <ol className="flex flex-wrap items-center gap-2 text-sm">

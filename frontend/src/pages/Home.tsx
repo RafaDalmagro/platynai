@@ -133,7 +133,7 @@ export function Home() {
 			<section className="grid items-center gap-10 md:grid-cols-[1.2fr_1fr]">
 				<div>
 					<p className="font-display text-sm uppercase tracking-[0.3em] text-primary">
-						Conquistas Steam
+						PlatynAI
 					</p>
 					{/* Nomeia o loop de completude, não a agregação (REQ-080):
 					    "tudo em um lugar" é o que todo tracker promete, e arquivo
@@ -142,7 +142,7 @@ export function Home() {
 					    porque o perfil de exemplo a prova a um clique (CON-080):
 					    se o link de demo cair, o título volta para agregação. */}
 					<h1 className="mt-3 text-balance text-4xl font-semibold uppercase leading-tight tracking-wide sm:text-5xl">
-						O que falta para o seu próximo 100%
+						O que falta para o seu próximo 100%?
 					</h1>
 					<p className="mt-4 max-w-prose text-lg text-muted-foreground">
 						Veja quais jogos da sua biblioteca estão a poucas

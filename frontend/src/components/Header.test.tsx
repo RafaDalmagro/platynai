@@ -69,7 +69,7 @@ describe("Header — breadcrumb", () => {
     renderWithProviders(<App />, "/");
 
     expect(
-      screen.getByRole("link", { name: /conquistas/i }),
+      screen.getByRole("link", { name: /platynai/i }),
     ).toHaveAttribute("href", "/");
   });
 });
