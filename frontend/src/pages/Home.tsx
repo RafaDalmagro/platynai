@@ -227,7 +227,7 @@ export function Home() {
 									nome ou avatar.
 								</li>
 								<li>
-									Copie o endereço da página — algo como
+									Copie o endereço/URL da página — algo como
 									<code className="mx-1 rounded bg-muted px-1 py-0.5 text-xs">
 										steamcommunity.com/id/seu-perfil
 									</code>
@@ -240,11 +240,12 @@ export function Home() {
 							</ol>
 							<p className="mt-2">
 								Se algo estiver <strong>privado</strong>, a
-								aplicação não funciona. Deixe como
-								<strong>Público</strong> o perfil e a biblioteca
-								na
+								aplicação não funcionará corretamente. Deixe
+								como <strong>Público</strong> o perfil e a
+								biblioteca na{" "}
 								<strong>Configuração de privacidade</strong> da
-								Steam; para conquistas de um jogo, a opção
+								Steam. Para visualizar as conquistas de cada
+								jogo, a opção{" "}
 								<strong>Privacidade de jogos</strong> também
 								precisa estar pública.
 							</p>
