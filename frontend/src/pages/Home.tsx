@@ -22,6 +22,11 @@ const STORAGE_KEY = "lastSteamId";
 // progresso de conquistas real. Ficou privado? O link some sozinho (REQ-081).
 const DEMO_STEAMID = "76561198082363621";
 
+// ponytail: knob de calibração, não número mágico — o host do backend
+// hiberna sem tráfego, e cold start real passa bem de 3s; abaixo disso é
+// round-trip normal e o aviso só criaria ruído.
+const COLD_START_HINT_MS = 3000;
+
 // Card de perfil que o próprio perfil justifica: o nome e o avatar vêm da API,
 // então o link só existe se o perfil existir. Falhou? Some sem alarde — vale
 // tanto para o atalho de quem já consultou (o id do localStorage) quanto para a
@@ -61,6 +66,7 @@ export function Home() {
 	const [value, setValue] = useState("");
 	const [error, setError] = useState<string | null>(null);
 	const [verificando, setVerificando] = useState(false);
+	const [demorando, setDemorando] = useState(false);
 	// Lazy: o Home re-renderiza a cada tecla digitada; o localStorage não muda.
 	const [lastSteamId] = useState(() => localStorage.getItem(STORAGE_KEY) ?? "");
 	const erroRef = useRef<HTMLParagraphElement>(null);
@@ -70,6 +76,17 @@ export function Home() {
 	useEffect(() => {
 		if (error) erroRef.current?.focus();
 	}, [error]);
+
+	// Só acende depois do limiar: a maioria das verificações é rápida (backend
+	// já aquecido), e mostrar o aviso de cold start nelas seria falso alarme.
+	useEffect(() => {
+		if (!verificando) {
+			setDemorando(false);
+			return;
+		}
+		const id = setTimeout(() => setDemorando(true), COLD_START_HINT_MS);
+		return () => clearTimeout(id);
+	}, [verificando]);
 
 	// O usuário não sabe o próprio SteamID64 — ele tem o link ou o nome do perfil.
 	// Três etapas, e cada uma só existe se a anterior não bastou: formato (local,
@@ -150,6 +167,7 @@ export function Home() {
 							spellCheck={false}
 							placeholder="steamcommunity.com/id/seu-perfil…"
 							value={value}
+							disabled={verificando}
 							onChange={(e) => {
 								setValue(e.target.value);
 								setError(null);
@@ -172,6 +190,13 @@ export function Home() {
 							disabled={verificando}>
 							{verificando ? "Verificando…" : "Ver biblioteca"}
 						</Button>
+
+						{demorando && (
+							<p role="status" aria-live="polite" className="text-xs text-muted-foreground">
+								O servidor estava inativo — a primeira consulta pode
+								demorar um pouco mais que o normal.
+							</p>
+						)}
 
 						{/* A objeção ("por que este site quer meu perfil?") dispara
 						    aqui, no campo — então a resposta mora aqui, visível, e

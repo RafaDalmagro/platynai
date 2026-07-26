@@ -83,7 +83,7 @@ export function Library() {
     ? (rawGroup as Group)
     : "none";
 
-  const { data, isLoading, isError, error } = useGames(
+  const { data, isLoading, isFetching, isError, error } = useGames(
     steamid,
     includesFor(sort, group),
   );
@@ -156,6 +156,16 @@ export function Library() {
 
       <SortBar value={sort} onChange={(s) => update({ sort: s })} />
       <GroupBar value={group} onChange={(g) => update({ group: g })} />
+
+      {/* Só percent/ach_count/quase_la e group=genre chegam aqui com dado em
+          tela: `includesFor` (client.ts) é quem decide se o sort/group exige
+          um fetch novo, e o keepPreviousData mantém a lista antiga visível
+          sem nenhum aviso — sem isto, a troca de filtro "não parece" carregar. */}
+      {isFetching && !isLoading && (
+        <p role="status" aria-live="polite" className="mb-4 text-xs text-muted-foreground">
+          Atualizando lista…
+        </p>
+      )}
 
       {isLoading && (
         <div className={GRID} aria-busy="true" aria-label="Carregando biblioteca…">
