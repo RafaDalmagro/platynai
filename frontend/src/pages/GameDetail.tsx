@@ -7,19 +7,14 @@ import { Message } from "@/components/Message";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Record (e não union solta): o TS cobra um rótulo por filtro, e a ordem das
 // chaves é a ordem das abas.
 const FILTROS = {
-  all: "Todas",
-  achieved: "Obtidas",
-  locked: "Pendentes",
+	all: "Todas",
+	achieved: "Obtidas",
+	locked: "Pendentes",
 } as const;
 
 type Filter = keyof typeof FILTROS;
@@ -31,9 +26,9 @@ const isFilter = (v: string | null): v is Filter => v != null && v in FILTROS;
 // aba, e "quais pendentes são as mais raras" — pergunta legítima — ficaria
 // inexprimível. Ver §7.1 da spec-design-ordenacao-derivada.
 const ORDENS = {
-  desbloqueio: "Desbloqueio",
-  faceis: "Mais fáceis",
-  raras: "Mais raras",
+	desbloqueio: "Desbloqueio",
+	faceis: "Mais fáceis",
+	raras: "Mais raras",
 } as const;
 
 type OrdemAch = keyof typeof ORDENS;
@@ -46,184 +41,187 @@ const isOrdem = (v: string | null): v is OrdemAch => v != null && v in ORDENS;
 // O corpus de guias é por jogo, não por conquista: por isso este link é do jogo
 // e mora aqui, não no card.
 const guiasDaComunidade = (appid: number) =>
-  `https://steamcommunity.com/app/${appid}/guides/?requiredtags%5B%5D=Achievements`;
+	`https://steamcommunity.com/app/${appid}/guides/?requiredtags%5B%5D=Achievements`;
 
 // Sem data → 0, que é menor que qualquer epoch real e mantém o comparador
 // numérico (Date.parse("") daria NaN, e NaN empata tudo silenciosamente).
 const quando = (ach: Achievement) =>
-  ach.unlocked_at ? Date.parse(ach.unlocked_at) : 0;
+	ach.unlocked_at ? Date.parse(ach.unlocked_at) : 0;
 
 // Obtidas primeiro (mais recente → mais antiga), depois as obtidas sem data
 // (unlocktime 0 da Steam), e por fim as pendentes. Array.sort é estável, então
 // pendentes e sem-data mantêm a ordem do schema sem precisar de critério extra.
 const porDesbloqueio = (a: Achievement, b: Achievement) =>
-  Number(b.achieved) - Number(a.achieved) || quando(b) - quando(a);
+	Number(b.achieved) - Number(a.achieved) || quando(b) - quando(a);
 
 // `null` (a Steam não devolveu raridade) vai sempre para o fim, nos dois
 // sentidos — nunca para o topo de "raras". Tratá-lo como 0 afirmaria que a
 // conquista sem dado é a mais rara do jogo: falso, e apresentado como resultado
 // de ordenação.
 const porRaridade = (dir: 1 | -1) => (a: Achievement, b: Achievement) => {
-  const x = a.global_percent;
-  const y = b.global_percent;
-  if (x == null) return y == null ? 0 : 1;
-  if (y == null) return -1;
-  return (x - y) * dir;
+	const x = a.global_percent;
+	const y = b.global_percent;
+	if (x == null) return y == null ? 0 : 1;
+	if (y == null) return -1;
+	return (x - y) * dir;
 };
 
 const COMPARADORES: Record<
-  OrdemAch,
-  (a: Achievement, b: Achievement) => number
+	OrdemAch,
+	(a: Achievement, b: Achievement) => number
 > = {
-  desbloqueio: porDesbloqueio,
-  faceis: porRaridade(-1), // maior % de jogadores primeiro
-  raras: porRaridade(1), // menor % primeiro
+	desbloqueio: porDesbloqueio,
+	faceis: porRaridade(-1), // maior % de jogadores primeiro
+	raras: porRaridade(1), // menor % primeiro
 };
 
 export function GameDetail() {
-  const { steamid = "", appid } = useParams();
-  const id = Number(appid);
-  const { data, isLoading, isError, error } = useGameDetail(steamid, id);
-  // Filtro na URL (e não em useState): é estado de UI compartilhável — o link
-  // para "o que ainda falta neste jogo" tem de sobreviver ao refresh.
-  const [params, setParams] = useSearchParams();
-  const raw = params.get("filter");
-  const filter: Filter = isFilter(raw) ? raw : "all";
-  const rawOrdem = params.get("ordem");
-  const ordem: OrdemAch = isOrdem(rawOrdem) ? rawOrdem : "desbloqueio";
+	const { steamid = "", appid } = useParams();
+	const id = Number(appid);
+	const { data, isLoading, isError, error } = useGameDetail(steamid, id);
+	// Filtro na URL (e não em useState): é estado de UI compartilhável — o link
+	// para "o que ainda falta neste jogo" tem de sobreviver ao refresh.
+	const [params, setParams] = useSearchParams();
+	const raw = params.get("filter");
+	const filter: Filter = isFilter(raw) ? raw : "all";
+	const rawOrdem = params.get("ordem");
+	const ordem: OrdemAch = isOrdem(rawOrdem) ? rawOrdem : "desbloqueio";
 
-  // Um atualizador só para os dois parâmetros, como a Library já faz: escrever
-  // um sem reler o outro apagaria o vizinho, porque `setParams` substitui a
-  // querystring inteira. Defaults omitidos para manter a URL limpa; `replace`
-  // para o botão Voltar não virar um desfazer de cliques em aba.
-  const update = (next: { filter?: Filter; ordem?: OrdemAch }) => {
-    const f = next.filter ?? filter;
-    const o = next.ordem ?? ordem;
-    const p: Record<string, string> = {};
-    if (f !== "all") p.filter = f;
-    if (o !== "desbloqueio") p.ordem = o;
-    setParams(p, { replace: true });
-  };
+	// Um atualizador só para os dois parâmetros, como a Library já faz: escrever
+	// um sem reler o outro apagaria o vizinho, porque `setParams` substitui a
+	// querystring inteira. Defaults omitidos para manter a URL limpa; `replace`
+	// para o botão Voltar não virar um desfazer de cliques em aba.
+	const update = (next: { filter?: Filter; ordem?: OrdemAch }) => {
+		const f = next.filter ?? filter;
+		const o = next.ordem ?? ordem;
+		const p: Record<string, string> = {};
+		if (f !== "all") p.filter = f;
+		if (o !== "desbloqueio") p.ordem = o;
+		setParams(p, { replace: true });
+	};
 
-  if (isLoading) {
-    return (
-      <div
-        className="flex flex-col gap-3"
-        aria-busy="true"
-        aria-label="Carregando conquistas…"
-      >
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-4 w-40" />
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-14 w-full" />
-        ))}
-      </div>
-    );
-  }
+	if (isLoading) {
+		return (
+			<div
+				className="flex flex-col gap-3"
+				aria-busy="true"
+				aria-label="Carregando conquistas…">
+				<Skeleton className="h-8 w-64" />
+				<Skeleton className="h-4 w-40" />
+				{Array.from({ length: 6 }).map((_, i) => (
+					<Skeleton key={i} className="h-14 w-full" />
+				))}
+			</div>
+		);
+	}
 
-  if (isError)
-    return <Message role="alert">{(error as Error).message}</Message>;
-  if (!data) return null;
+	if (isError)
+		return <Message role="alert">{(error as Error).message}</Message>;
+	if (!data) return null;
 
-  if (!data.supports_achievements) {
-    return (
-      <div>
-        <h1 className="mb-4 text-2xl font-semibold uppercase tracking-wide">
-          {data.name}
-        </h1>
-        {/* achievements_private distingue "jogo sem conquistas" (a Steam não
-            tem o que mostrar) de "conquistas privadas" (a Steam tem o dado,
-            mas nega por causa da config "Detalhes do jogo" — separada da
-            privacidade geral do perfil). Confundir os dois faria alguém com
-            biblioteca pública e conquistas de verdade achar que o app quebrou. */}
-        <Message>
-          {data.achievements_private
-            ? "As conquistas deste jogo estão privadas nas configurações da Steam (“Detalhes do jogo”), separado da privacidade geral do perfil."
-            : "Este jogo não possui conquistas."}
-        </Message>
-      </div>
-    );
-  }
+	if (!data.supports_achievements) {
+		return (
+			<div>
+				<h1 className="mb-4 text-2xl font-semibold uppercase tracking-wide">
+					{data.name}
+				</h1>
+				{/* achievements_private continua distinguindo "jogo sem conquistas"
+            (a Steam não tem o que mostrar) de "conquistas privadas" (a Steam
+            tem o dado, mas bloqueia porque a Configuração de privacidade ainda
+            não está toda em Público; aqui o campo relevante é Privacidade de
+            jogos). */}
+				<Message>
+					{data.achievements_private
+						? "As conquistas deste jogo estão privadas. Para a aplicação funcionar, deixe a opção Privacidade de jogos como Pública em Configuração de privacidade."
+						: "Este jogo não possui conquistas."}
+				</Message>
+			</div>
+		);
+	}
 
-  const shown = data.achievements
-    .filter((a) =>
-      filter === "all" ? true : filter === "achieved" ? a.achieved : !a.achieved,
-    )
-    .sort(COMPARADORES[ordem]);
-  const percent = Math.round(data.percent);
+	const shown = data.achievements
+		.filter((a) =>
+			filter === "all"
+				? true
+				: filter === "achieved"
+					? a.achieved
+					: !a.achieved,
+		)
+		.sort(COMPARADORES[ordem]);
+	const percent = Math.round(data.percent);
 
-  return (
-    <div>
-      <h1 className="mb-1 text-2xl font-semibold uppercase tracking-wide">
-        {data.name}
-      </h1>
-      <p className="mb-2 text-muted-foreground tabular-nums">
-        {data.achieved_count} de {data.total_count} conquistas · {percent}%
-        {" · "}
-        <a
-          href={guiasDaComunidade(data.appid)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline underline-offset-4 hover:text-foreground"
-        >
-          Guias da comunidade
-        </a>
-      </p>
-      <Progress
-        value={percent}
-        segmented
-        complete={percent === 100}
-        className="mb-6"
-      />
+	return (
+		<div>
+			<h1 className="mb-1 text-2xl font-semibold uppercase tracking-wide">
+				{data.name}
+			</h1>
+			<p className="mb-2 text-muted-foreground tabular-nums">
+				{data.achieved_count} de {data.total_count} conquistas ·{" "}
+				{percent}%{" · "}
+				<a
+					href={guiasDaComunidade(data.appid)}
+					target="_blank"
+					rel="noopener noreferrer"
+					className="underline underline-offset-4 hover:text-foreground">
+					Guias da comunidade
+				</a>
+			</p>
+			<Progress
+				value={percent}
+				segmented
+				complete={percent === 100}
+				className="mb-6"
+			/>
 
-      {/* Some quando ordenar não mudaria nada: jogo sem stats globais na Steam
+			{/* Some quando ordenar não mudaria nada: jogo sem stats globais na Steam
           renderiza sem raridade, e um controle que não faz nada é um controle
           que mente. Mesma postura do selo "Rara" e do "Continuar como". */}
-      {data.achievements.some((a) => a.global_percent != null) && (
-        <div className="mb-4 flex flex-wrap items-center gap-2">
-          <span className="font-display text-xs uppercase tracking-widest text-muted-foreground">
-            Ordenar:
-          </span>
-          {Object.entries(ORDENS).map(([value, label]) => (
-            <Button
-              key={value}
-              size="sm"
-              variant={ordem === value ? "active" : "default"}
-              aria-pressed={ordem === value}
-              onClick={() => update({ ordem: value as OrdemAch })}
-              className="font-display text-xs uppercase tracking-wide"
-            >
-              {label}
-            </Button>
-          ))}
-        </div>
-      )}
+			{data.achievements.some((a) => a.global_percent != null) && (
+				<div className="mb-4 flex flex-wrap items-center gap-2">
+					<span className="font-display text-xs uppercase tracking-widest text-muted-foreground">
+						Ordenar:
+					</span>
+					{Object.entries(ORDENS).map(([value, label]) => (
+						<Button
+							key={value}
+							size="sm"
+							variant={ordem === value ? "active" : "default"}
+							aria-pressed={ordem === value}
+							onClick={() => update({ ordem: value as OrdemAch })}
+							className="font-display text-xs uppercase tracking-wide">
+							{label}
+						</Button>
+					))}
+				</div>
+			)}
 
-      <Tabs value={filter} onValueChange={(v) => update({ filter: v as Filter })}>
-        <TabsList>
-          {Object.entries(FILTROS).map(([value, label]) => (
-            <TabsTrigger key={value} value={value}>
-              {label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+			<Tabs
+				value={filter}
+				onValueChange={(v) => update({ filter: v as Filter })}>
+				<TabsList>
+					{Object.entries(FILTROS).map(([value, label]) => (
+						<TabsTrigger key={value} value={value}>
+							{label}
+						</TabsTrigger>
+					))}
+				</TabsList>
 
-        {/* Um painel por aba: é o que o aria-controls do trigger aponta. Só o
+				{/* Um painel por aba: é o que o aria-controls do trigger aponta. Só o
             ativo monta, então a lista não é renderizada três vezes. */}
-        <TabsContent value={filter} className="flex flex-col gap-2">
-          {shown.map((ach) => (
-            <AchievementItem
-              key={ach.apiname}
-              ach={ach}
-              gameName={data.name}
-              steamid={steamid}
-              // `data.appid` e não o `appid` do useParams: aquele é string.
-              // Mesma fonte que o link de guias acima usa.
-              appid={data.appid}
-            />
-          ))}
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
+				<TabsContent value={filter} className="flex flex-col gap-2">
+					{shown.map((ach) => (
+						<AchievementItem
+							key={ach.apiname}
+							ach={ach}
+							gameName={data.name}
+							steamid={steamid}
+							// `data.appid` e não o `appid` do useParams: aquele é string.
+							// Mesma fonte que o link de guias acima usa.
+							appid={data.appid}
+						/>
+					))}
+				</TabsContent>
+			</Tabs>
+		</div>
+	);
 }

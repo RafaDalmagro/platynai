@@ -68,7 +68,9 @@ export function Home() {
 	const [verificando, setVerificando] = useState(false);
 	const [demorando, setDemorando] = useState(false);
 	// Lazy: o Home re-renderiza a cada tecla digitada; o localStorage não muda.
-	const [lastSteamId] = useState(() => localStorage.getItem(STORAGE_KEY) ?? "");
+	const [lastSteamId] = useState(
+		() => localStorage.getItem(STORAGE_KEY) ?? "",
+	);
 	const erroRef = useRef<HTMLParagraphElement>(null);
 
 	// Erro de submit leva o foco: sem isso, quem navega por teclado ou leitor de
@@ -143,8 +145,8 @@ export function Home() {
 					</h1>
 					<p className="mt-4 max-w-prose text-lg text-muted-foreground">
 						Veja quais jogos da sua biblioteca estão a poucas
-						conquistas de fechar, quanto já jogou e o que ainda falta
-						em cada um — direto da Steam, em tempo real.
+						conquistas de fechar, quanto já jogou e o que ainda
+						falta em cada um — direto da Steam, em tempo real.
 					</p>
 				</div>
 
@@ -192,9 +194,12 @@ export function Home() {
 						</Button>
 
 						{demorando && (
-							<p role="status" aria-live="polite" className="text-xs text-muted-foreground">
-								O servidor estava inativo — a primeira consulta pode
-								demorar um pouco mais que o normal.
+							<p
+								role="status"
+								aria-live="polite"
+								className="text-xs text-muted-foreground">
+								O servidor estava inativo — a primeira consulta
+								pode demorar um pouco mais que o normal.
 							</p>
 						)}
 
@@ -217,7 +222,10 @@ export function Home() {
 								Não sei meu Steam ID
 							</summary>
 							<ol className="mt-2 list-decimal space-y-1 pl-5">
-								<li>Abra a Steam (app ou site) e clique no seu nome ou avatar.</li>
+								<li>
+									Abra a Steam (app ou site) e clique no seu
+									nome ou avatar.
+								</li>
 								<li>
 									Copie o endereço da página — algo como
 									<code className="mx-1 rounded bg-muted px-1 py-0.5 text-xs">
@@ -225,22 +233,20 @@ export function Home() {
 									</code>
 									.
 								</li>
-								<li>Cole aqui. Não precisa descobrir os 17 dígitos.</li>
+								<li>
+									Cole aqui. Não precisa descobrir os 17
+									dígitos.
+								</li>
 							</ol>
 							<p className="mt-2">
-								Perfil <strong>privado</strong>? A Steam não entrega a
-								biblioteca para ninguém — mude para público em Privacidade,
-								nas configurações do seu perfil.
-							</p>
-							{/* Biblioteca e conquistas usam toggles diferentes na Steam
-							    (REQ ver GameDetail.tsx/achievements_private) — sem esta
-							    linha, quem tem o perfil público mas "Detalhes do jogo"
-							    fechado lê a mensagem acima, marca o perfil como público de
-							    novo e continua sem entender por que as conquistas não vêm. */}
-							<p className="mt-2">
-								Biblioteca aparece mas <strong>conquistas de um jogo</strong>{" "}
-								não? É outra configuração — "Detalhes do jogo" controla isso
-								separado do perfil geral; ative-a também em Privacidade.
+								Se algo estiver <strong>privado</strong>, a
+								aplicação não funciona. Deixe como
+								<strong>Público</strong> o perfil e a biblioteca
+								na
+								<strong>Configuração de privacidade</strong> da
+								Steam; para conquistas de um jogo, a opção
+								<strong>Privacidade de jogos</strong> também
+								precisa estar pública.
 							</p>
 						</details>
 					</form>
@@ -250,7 +256,10 @@ export function Home() {
 					    levaria para longe dela. Quem chega sem nada não tem o que
 					    continuar, e precisa é de prova. */}
 					{lastSteamId ? (
-						<PerfilLink steamid={lastSteamId} rotulo="Continuar como" />
+						<PerfilLink
+							steamid={lastSteamId}
+							rotulo="Continuar como"
+						/>
 					) : (
 						<PerfilLink
 							steamid={DEMO_STEAMID}
